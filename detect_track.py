@@ -115,8 +115,6 @@ if __name__ == '__main__':
         if not good:
             break
 
-        #TODO: maybe at FPS code later
-
         #update tracker
         good, bbox = tracker.update(frame)
 
@@ -129,9 +127,41 @@ if __name__ == '__main__':
             point1 = (int(bbox[0]), int(bbox[1]))
             point2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(frame, point1, point2, (255,0,0), 2, 1)
+
+            #calculate the middle of the rectangle
+            #get the x coordiante of the box and hen add half of the width
+            middle_box = bbox[0] + (bbox[2] / 2)
+
+            #get the dimensions of the fram to dtermine middle
+            image_height, image_width, _ = frame.shape
+
+            #get the middle of the frame
+            middle_frame = image_width / 2
+
+            #determine direction to spin
+            #object is in the right half
+            if(middle_box < (middle_frame - 20)):
+                cv2.putText(frame, "Turn left", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
+
+                #deternmine the error between the middle of the box and frame
+                error = middle_frame - middle_box
+                print(f"left turn error: {error}")   
+
+                
+            #object is in the left half
+            elif((middle_frame + 20) < middle_box):
+                cv2.putText(frame, "Turn right", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
+                error = middle_box - middle_frame
+                print(f"right turn error: {error}")   
+                
+            #object is within the middle
+            else:
+                cv2.putText(frame, "middle", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
+                
         else:
             #tracking failure, try to detect a new person
             cv2.putText(frame, "Tracking failure detected", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
+            
         
         # Display FPS on frame
         cv2.putText(frame, "FPS : " + str(int(fps)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
@@ -146,5 +176,4 @@ if __name__ == '__main__':
 
     cv2.destroyAllWindows()
 
-    #run tracking
-    #tracking(camera,frame,bbox)
+
