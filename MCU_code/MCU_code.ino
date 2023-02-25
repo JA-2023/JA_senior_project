@@ -13,29 +13,17 @@ typedef enum STATE_TYPE
 
 STATE_TYPE state = READ;
 
-// struct data
-// {
-//   bool turn, move, run, mode;  
-//   uint16_t error;
-// }
-
-struct Data
+typedef struct Data
 {
-  bool yellow, green, red;
-  bool buttonA, buttonB, buttonC;
+  bool turn, move, run, mode;  
+  uint16_t error;
+}Data;
 
-  int16_t leftMotor, rightMotor;
-  uint16_t batteryMillivolts;
-  uint16_t analog[6];
 
-  bool playNotes;
-  char notes[14];
-
-  int16_t leftEncoder, rightEncoder;
-};
 /*Code for data struct is sourced and modifed from Pololu ROMIRPiSlaveDemo code*/
-PololuRPiSlave<struct Data,5> MCU; //TODO: need to figure out how to change this to what I need
+PololuRPiSlave<Data,0> MCU;
 
+Romi32U4Motors motors;
 
 void setup() {
 
@@ -93,8 +81,8 @@ void loop() {
       turn_vals[1] = turn_vals[1] + move_val;
       
       //set the motor speeds
-      setLeftSpeed(turn_vals[0]);
-      setRightSpeed(turn_vals[1]);
+      motors.setLeftSpeed(turn_vals[0]);
+      motors.setRightSpeed(turn_vals[1]);
       
       //go to the read state
       state = READ;
@@ -106,15 +94,15 @@ void loop() {
       rand_left = random(0,300);
 
       //set motor speeds
-      setLeftSpeed(rand_left);
-      setRightSpeed(rand_right);
+      motors.setLeftSpeed(rand_left);
+      motors.setRightSpeed(rand_right);
 
       //turn for a random amount of time (maybe pick random encoder number?)
       delay(500);
 
       //move forward at middle speed (150) for both motors
-      setLeftSpeed(150);
-      setRightSpeed(150);      
+      motors.setLeftSpeed(150);
+      motors.setRightSpeed(150);      
 
       //move for a second or two
       delay(500);
@@ -145,7 +133,7 @@ uint16_t move_calc(uint16_t error, bool run)
 
 
 //speeds is an array passed in by reference so it can be modifed
-void turn_calc(uint16_t error, uint16_t turn, uint16_t &speeds)
+void turn_calc(uint16_t error, uint16_t turn, uint16_t *speeds)
 {
   int kp = 1;  
   uint16_t speed = 0;
