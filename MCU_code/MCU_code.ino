@@ -15,7 +15,7 @@ STATE_TYPE state = READ;
 
 typedef struct Data
 {
-  bool turn, move, run, mode;  
+  bool turn, direction, move, run, mode;  
   uint16_t error;
 }Data;
 
@@ -73,7 +73,7 @@ void loop() {
       //calculate the turn movement if the bit is high
       if(MCU.buffer.turn == 1)  
       {
-        turn_calc(MCU.buffer.error, MCU.buffer.run, turn_vals);        
+        turn_calc(MCU.buffer.error, MCU.buffer.direction, turn_vals);        
       }
       
       //add the forward movement and turn movement
@@ -113,7 +113,7 @@ void loop() {
   } 
 }
 
-//TODO: change this to return a value later
+
 //the difference between run and follow is the direction of the motors
 uint16_t move_calc(uint16_t error, bool run)
 {
@@ -121,7 +121,8 @@ uint16_t move_calc(uint16_t error, bool run)
   //check the run bit and determine what to do with the error
   if(run == 1)  
   {
-    //TODO: figure out what to change for the error if it is running
+    //the closer the person the bigger the error so the inverse is used
+    error = 1 / error;
   }
 
   //run proportional controller with error passed in
@@ -133,7 +134,7 @@ uint16_t move_calc(uint16_t error, bool run)
 
 
 //speeds is an array passed in by reference so it can be modifed
-void turn_calc(uint16_t error, uint16_t turn, uint16_t *speeds)
+void turn_calc(uint16_t error, uint16_t direction, uint16_t *speeds)
 {
   int kp = 1;  
   uint16_t speed = 0;
@@ -141,7 +142,7 @@ void turn_calc(uint16_t error, uint16_t turn, uint16_t *speeds)
   //run proportional controller with error passed in
   speed = error * kp;
   //check turn bit to determine which motor to apply speeds to
-  if(turn == 1)
+  if(direction == 1)
   {
     //update speed in array passed in
     speeds[0] = speed;
