@@ -1,6 +1,6 @@
 from a_star import AStar
 import time
-
+import smbus
 #data format is turn, direction, move, run, mode, error
 
 left = 0
@@ -23,6 +23,7 @@ class bot_test():
     def __init__(self) -> None:
         self.test_data = []
         self.a_star = AStar()
+        self.bus = smbus.SMBus(1)
 
     #####follow right turn testing#####
     def test_follow_right(self):
@@ -30,7 +31,8 @@ class bot_test():
         self.test_data = [turn, right, no_move,follow,move_mode,low_error]
         
         #send data over I2C
-        self.a_star.write_pack(address,format, self.test_data)
+        #self.a_star.write_pack(address,format, self.test_data)
+        self.bus.write_i2c_block_data(20, address, self.test_data)
         #sleep to observe change
         time.sleep(2)
 
