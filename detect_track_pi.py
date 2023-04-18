@@ -1,5 +1,5 @@
 import cv2
-
+import smbus
 classNames = {0: 'background',1: 'person'}
 
 tracker = cv2.TrackerKCF_create()
@@ -39,9 +39,22 @@ def detection(frame):
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
+left = 0
+right = 1
+turn = 1
+no_turn = 0
+move = 1
+no_move = 0
+run = 1
+follow = 0
+move_mode = 1
+headless = 0
 
 
 if __name__ == '__main__':
+
+    test_data = []
+    bus = smbus.SMBus(1)
 
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
@@ -89,26 +102,31 @@ if __name__ == '__main__':
             if(middle_box < (middle_frame - 20)):
                 #deternmine the error between the middle of the box and frame
                 error = middle_frame - middle_box
-                print(f"left turn error: {error}")   
+                print(f"left turn error: {error}")  
 
+                test_data = [turn, left, no_move,follow,move_mode,error]
+                bus.write_i2c_block_data(20, 0, test_data)
                 
             #object is in the left half
             elif((middle_frame + 20) < middle_box):
                 error = middle_box - middle_frame
-                print(f"right turn error: {error}")   
+                print(f"right turn error: {error}")  
+
+                test_data = [turn, right, no_move,follow,move_mode,error]
+                bus.write_i2c_block_data(20, 0, test_data) 
                 
             #object is within the middle
             else:
-                #cv2.putText(frame, "middle", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
                 print("middle")
+                test_data = [no_turn, right,no_move,follow,move_mode,0]
+                bus.write_i2c_block_data(20, 0, test_data) 
                 
         else:
             #tracking failure, try to detect a new person
             print("tracking error")
+            test_data = [no_turn, right,no_move,follow,move_mode,0]
+            bus.write_i2c_block_data(20, 0, test_data) 
             
-        
-
-        #cv2.putText(frame, "object",(int(bbox[0]), int(bbox[1]+0.05* bbox[3])),cv2.FONT_HERSHEY_SIMPLEX,(.005*bbox[2]),(0,0,255))
 
          # Display result
         #cv2.imshow("Tracking", frame)
