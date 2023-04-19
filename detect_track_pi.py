@@ -1,5 +1,6 @@
 import cv2
 import smbus
+import time
 classNames = {0: 'background',1: 'person'}
 
 #tracker = cv2.TrackerKCF_create()
@@ -55,6 +56,7 @@ if __name__ == '__main__':
 
     test_data = []
     bus = smbus.SMBus(1)
+    time.sleep(1)
 
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
@@ -103,10 +105,10 @@ if __name__ == '__main__':
             if(middle_box < (middle_frame - 20)):
                 #deternmine the error between the middle of the box and frame
                
-                error = int(middle_frame - middle_box)
+                error = int((middle_frame - middle_box)/5)
                 
-                if(error => 300):
-                    error = 300
+                if(error > 300):
+                    error = 295
 
                 print(f"left turn error: {error}")  
 
@@ -116,10 +118,10 @@ if __name__ == '__main__':
             #object is in the left half
             elif((middle_frame + 20) < middle_box):
                 
-                error = int(middle_box - middle_frame)
+                error = int((middle_box - middle_frame)/5)
                 
-                if(error => 300):
-                    error = 300
+                if(error > 300):
+                    error = 295
 
                 print(f"right turn error: {error}")  
 
@@ -135,8 +137,10 @@ if __name__ == '__main__':
             print("tracking error")
             test_data = [no_turn, right,no_move,follow,move_mode,0]
             
-            
-        bus.write_i2c_block_data(20, 0, test_data)
+        try: 
+            bus.write_i2c_block_data(20, 0, test_data)
+        except:
+            print("IO error")
         
        # Display result
         #cv2.imshow("Tracking", frame)
