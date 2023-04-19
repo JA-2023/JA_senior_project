@@ -101,33 +101,42 @@ if __name__ == '__main__':
             #object is in the right half
             if(middle_box < (middle_frame - 20)):
                 #deternmine the error between the middle of the box and frame
+               
                 error = middle_frame - middle_box
+
+                if(error > 300):
+                    error = 300
+
                 print(f"left turn error: {error}")  
 
                 test_data = [turn, left, no_move,follow,move_mode,error]
-                bus.write_i2c_block_data(20, 0, test_data)
+                #bus.write_i2c_block_data(20, 0, test_data)
                 
             #object is in the left half
             elif((middle_frame + 20) < middle_box):
                 error = middle_box - middle_frame
+
+                if(error > 300):
+                    error = 300
+
                 print(f"right turn error: {error}")  
 
                 test_data = [turn, right, no_move,follow,move_mode,error]
-                bus.write_i2c_block_data(20, 0, test_data) 
+                #bus.write_i2c_block_data(20, 0, test_data) 
                 
             #object is within the middle
             else:
                 print("middle")
                 test_data = [no_turn, right,no_move,follow,move_mode,0]
-                bus.write_i2c_block_data(20, 0, test_data) 
+                #bus.write_i2c_block_data(20, 0, test_data) 
                 
         else:
             #tracking failure, try to detect a new person
             print("tracking error")
             test_data = [no_turn, right,no_move,follow,move_mode,0]
-            bus.write_i2c_block_data(20, 0, test_data) 
             
-
+            
+        bus.write_i2c_block_data(20, 0, test_data) 
          # Display result
         #cv2.imshow("Tracking", frame)
         key = cv2.waitKey(3)
