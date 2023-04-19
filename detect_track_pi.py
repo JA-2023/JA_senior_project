@@ -2,8 +2,8 @@ import cv2
 import smbus
 classNames = {0: 'background',1: 'person'}
 
-tracker = cv2.TrackerKCF_create()
-
+#tracker = cv2.TrackerKCF_create()
+tracker = cv2.legacy_TrackerMOSSE.create()
 #creates deep neural network with the model and config file passed in
 dnn_model = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                         'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         bbox = detection(frame=frame)
 
     #set up tracker with first frame and bounding box
-    #good = tracker.init(frame, bbox)
+    good = tracker.init(frame, bbox)
     
     #loop and check read frames
     while True:
@@ -82,8 +82,8 @@ if __name__ == '__main__':
             break
 
         #update tracker
-        #good, bbox = tracker.update(frame)
-        bbox = detection(frame=frame)
+        good, bbox = tracker.update(frame)
+        #bbox = detection(frame=frame)
         
         #draw new bounding box
         if good:

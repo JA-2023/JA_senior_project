@@ -2,8 +2,8 @@ import cv2
 
 classNames = {0: 'background',1: 'person'}
 
-tracker = cv2.TrackerKCF_create()
-
+#tracker = cv2.TrackerKCF_create()
+tracker = cv2.legacy_TrackerMOSSE.create()
 #creates deep neural network with the model and config file passed in
 dnn_model = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                         'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
@@ -98,6 +98,7 @@ if __name__ == '__main__':
     bbox = detection(frame=frame)
     #if a person is not found then keep trying
     while(bbox == (0,0,0,0)):
+        val, frame = camera.read()
         bbox = detection(frame=frame)
 
     #set up tracker with first frame and bounding box
@@ -117,7 +118,7 @@ if __name__ == '__main__':
 
         #update tracker
         good, bbox = tracker.update(frame)
-
+        #bbox = detection(frame=frame)
         # Calculate Frames per second (FPS)
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
 
