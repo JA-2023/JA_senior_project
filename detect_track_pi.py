@@ -70,7 +70,7 @@ if __name__ == '__main__':
         bbox = detection(frame=frame)
 
     #set up tracker with first frame and bounding box
-    good = tracker.init(frame, bbox)
+    #good = tracker.init(frame, bbox)
     
     #loop and check read frames
     while True:
@@ -82,11 +82,12 @@ if __name__ == '__main__':
             break
 
         #update tracker
-        good, bbox = tracker.update(frame)
-
+        #good, bbox = tracker.update(frame)
+        bbox = detection(frame=frame)
+        
         #draw new bounding box
         if good:
-
+            
             #calculate the middle of the rectangle
             #get the x coordiante of the box and hen add half of the width
             middle_box = bbox[0] + (bbox[2] / 2)
@@ -102,33 +103,32 @@ if __name__ == '__main__':
             if(middle_box < (middle_frame - 20)):
                 #deternmine the error between the middle of the box and frame
                
-                error = middle_frame - middle_box
-
-                if(error > 300):
+                error = int(middle_frame - middle_box)
+                
+                if(error => 300):
                     error = 300
 
                 print(f"left turn error: {error}")  
 
                 test_data = [turn, left, no_move,follow,move_mode,error]
-                #bus.write_i2c_block_data(20, 0, test_data)
+
                 
             #object is in the left half
             elif((middle_frame + 20) < middle_box):
-                error = middle_box - middle_frame
-
-                if(error > 300):
+                
+                error = int(middle_box - middle_frame)
+                
+                if(error => 300):
                     error = 300
 
                 print(f"right turn error: {error}")  
 
                 test_data = [turn, right, no_move,follow,move_mode,error]
-                #bus.write_i2c_block_data(20, 0, test_data) 
                 
             #object is within the middle
             else:
                 print("middle")
-                test_data = [no_turn, right,no_move,follow,move_mode,0]
-                #bus.write_i2c_block_data(20, 0, test_data) 
+                test_data = [no_turn, right,no_move,follow,move_mode,0] 
                 
         else:
             #tracking failure, try to detect a new person
@@ -136,8 +136,9 @@ if __name__ == '__main__':
             test_data = [no_turn, right,no_move,follow,move_mode,0]
             
             
-        bus.write_i2c_block_data(20, 0, test_data) 
-         # Display result
+        bus.write_i2c_block_data(20, 0, test_data)
+        
+       # Display result
         #cv2.imshow("Tracking", frame)
         key = cv2.waitKey(3)
         if key == 27:
