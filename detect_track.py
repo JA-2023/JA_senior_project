@@ -39,10 +39,10 @@ def detection(frame):
             image_height, image_width, _ = frame.shape
 
             #get the dimensions from the DNN and scale to frame
-            box_x = detection[3] * image_width
-            box_y = detection[4] * image_height
-            box_width = detection[5] * image_width
-            box_height = detection[6] * image_height
+            box_x = detection[3] * image_width /2
+            box_y = detection[4] * image_height /2
+            box_width = detection[5] * image_width /2
+            box_height = detection[6] * image_height /2
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
@@ -85,7 +85,8 @@ def tracking(camera, frame, bbox):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-
+    
+    count = 0
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
 
@@ -117,8 +118,14 @@ if __name__ == '__main__':
             break
 
         #update tracker
-        good, bbox = tracker.update(frame)
-        #bbox = detection(frame=frame)
+        if(count > 20):
+            bbox = detection(frame=frame)
+            tracker.init(frame, bbox)
+            count = 0
+        else:
+            good, bbox = tracker.update(frame)
+            count += 1
+        
         # Calculate Frames per second (FPS)
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
 
@@ -168,7 +175,9 @@ if __name__ == '__main__':
         cv2.putText(frame, "FPS : " + str(int(fps)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
 
         #cv2.putText(frame, "object",(int(bbox[0]), int(bbox[1]+0.05* bbox[3])),cv2.FONT_HERSHEY_SIMPLEX,(.005*bbox[2]),(0,0,255))
-
+        
+        
+            
          # Display result
         cv2.imshow("Tracking", frame)
         key = cv2.waitKey(30)

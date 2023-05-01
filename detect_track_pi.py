@@ -1,7 +1,6 @@
 import cv2
 import smbus
 import time
-classNames = {0: 'background',1: 'person'}
 
 #tracker = cv2.TrackerKCF_create()
 tracker = cv2.legacy_TrackerMOSSE.create()
@@ -27,16 +26,16 @@ def detection(frame):
         #get the confidence metric from the ouput
         confidence = detection[2]
         #check if the confidence is above the threshold
-        if confidence > .7:
+        if confidence > .9:
 
             #get dimensions of the frame (_ holds the color channel, not needed)
             image_height, image_width, _ = frame.shape
 
             #get the dimensions from the DNN and scale to frame
-            box_x = detection[3] * image_width
-            box_y = detection[4] * image_height
-            box_width = detection[5] * image_width
-            box_height = detection[6] * image_height
+            box_x = detection[3] * image_width /2
+            box_y = detection[4] * image_height /2
+            box_width = detection[5] * image_width /2
+            box_height = detection[6] * image_height /2
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
@@ -57,6 +56,8 @@ if __name__ == '__main__':
     test_data = []
     bus = smbus.SMBus(1)
     time.sleep(1)
+    
+    count = 0
 
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
@@ -84,8 +85,14 @@ if __name__ == '__main__':
             break
 
         #update tracker
-        good, bbox = tracker.update(frame)
-        #bbox = detection(frame=frame)
+        if(count > 20):
+            bbox = detection(frame=frame)
+            tracker.init(frame, bbox)
+            count = 0
+        else:
+            good, bbox = tracker.update(frame)
+            count += 1
+            
         
         #draw new bounding box
         if good:
@@ -141,6 +148,7 @@ if __name__ == '__main__':
             bus.write_i2c_block_data(20, 0, test_data)
         except:
             print("IO error")
+        
         
        # Display result
         #cv2.imshow("Tracking", frame)
