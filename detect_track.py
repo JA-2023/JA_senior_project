@@ -2,27 +2,14 @@ import cv2
 
 classNames = {0: 'background',1: 'person'}
 
-tracker_types = ['BOOSTING', 'MIL', 'KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
+tracker_types = ['KCF', 'MOSSE', 'CSRT']
 
-tracker_type = tracker_types[3]
+tracker_type = tracker_types[1]
 
-if tracker_type == 'BOOSTING':
-    tracker = cv2.legacy.TrackerBoosting_create()
-    
-if tracker_type == 'MIL':
-    tracker = cv2.TrackerMIL_create()
     
 if tracker_type == 'KCF':
     tracker = cv2.TrackerKCF_create()
     
-if tracker_type == 'TLD':
-    tracker = cv2.legacy.TrackerTLD_create()
-    
-if tracker_type == 'MEDIANFLOW':
-    tracker = cv2.legacy.TrackerMedianFlow_create()
-    
-if tracker_type == 'GOTURN':
-    tracker = cv2.TrackerGOTURN_create()
     
 if tracker_type == 'MOSSE':
     tracker = cv2.legacy_TrackerMOSSE.create()
