@@ -2,11 +2,40 @@ import cv2
 
 classNames = {0: 'background',1: 'person'}
 
-#tracker = cv2.TrackerKCF_create()
-tracker = cv2.legacy_TrackerMOSSE.create()
+tracker_types = ['BOOSTING', 'MIL', 'KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
+
+tracker_type = tracker_types[3]
+
+if tracker_type == 'BOOSTING':
+    tracker = cv2.legacy.TrackerBoosting_create()
+    
+if tracker_type == 'MIL':
+    tracker = cv2.TrackerMIL_create()
+    
+if tracker_type == 'KCF':
+    tracker = cv2.TrackerKCF_create()
+    
+if tracker_type == 'TLD':
+    tracker = cv2.legacy.TrackerTLD_create()
+    
+if tracker_type == 'MEDIANFLOW':
+    tracker = cv2.legacy.TrackerMedianFlow_create()
+    
+if tracker_type == 'GOTURN':
+    tracker = cv2.TrackerGOTURN_create()
+    
+if tracker_type == 'MOSSE':
+    tracker = cv2.legacy_TrackerMOSSE.create()
+    
+if tracker_type == 'CSRT':
+    tracker = cv2.TrackerCSRT_create()
+    
+
 #creates deep neural network with the model and config file passed in
 dnn_model = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                         'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
+
+
 
 def id_class_name(class_id, classes):
     for key, value in classes.items():
@@ -40,9 +69,9 @@ def detection(frame):
 
             #get the dimensions from the DNN and scale to frame
             box_x = detection[3] * image_width /2
-            box_y = detection[4] * image_height /2
+            box_y = detection[4] * image_height 
             box_width = detection[5] * image_width /2
-            box_height = detection[6] * image_height /2
+            box_height = detection[6] * image_height 
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
@@ -60,8 +89,6 @@ def tracking(camera, frame, bbox):
         #check the return value of the camera to check if it works
         if not good:
             break
-
-        #TODO: maybe at FPS code later
 
         #update tracker
         good, bbox = tracker.update(frame)
@@ -93,8 +120,6 @@ if __name__ == '__main__':
     #capture a frame from the camera
     val, frame = camera.read()
 
-    
-
     #detect a person from the frame
     bbox = detection(frame=frame)
     #if a person is not found then keep trying
@@ -119,8 +144,9 @@ if __name__ == '__main__':
 
         #update tracker
         if(count > 20):
+
             bbox = detection(frame=frame)
-            tracker.init(frame, bbox)
+            #tracker.init(frame, bbox)
             count = 0
         else:
             good, bbox = tracker.update(frame)
