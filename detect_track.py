@@ -2,11 +2,40 @@ import cv2
 
 classNames = {0: 'background',1: 'person'}
 
-#tracker = cv2.TrackerKCF_create()
-tracker = cv2.legacy_TrackerMOSSE.create()
+tracker_types = ['BOOSTING', 'MIL', 'KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
+
+tracker_type = tracker_types[3]
+
+if tracker_type == 'BOOSTING':
+    tracker = cv2.legacy.TrackerBoosting_create()
+    
+if tracker_type == 'MIL':
+    tracker = cv2.TrackerMIL_create()
+    
+if tracker_type == 'KCF':
+    tracker = cv2.TrackerKCF_create()
+    
+if tracker_type == 'TLD':
+    tracker = cv2.legacy.TrackerTLD_create()
+    
+if tracker_type == 'MEDIANFLOW':
+    tracker = cv2.legacy.TrackerMedianFlow_create()
+    
+if tracker_type == 'GOTURN':
+    tracker = cv2.TrackerGOTURN_create()
+    
+if tracker_type == 'MOSSE':
+    tracker = cv2.legacy_TrackerMOSSE.create()
+    
+if tracker_type == 'CSRT':
+    tracker = cv2.TrackerCSRT_create()
+    
+
 #creates deep neural network with the model and config file passed in
 dnn_model = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                         'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
+
+
 
 def id_class_name(class_id, classes):
     for key, value in classes.items():
@@ -39,10 +68,10 @@ def detection(frame):
             image_height, image_width, _ = frame.shape
 
             #get the dimensions from the DNN and scale to frame
-            box_x = detection[3] * image_width
-            box_y = detection[4] * image_height
-            box_width = detection[5] * image_width
-            box_height = detection[6] * image_height
+            box_x = detection[3] * image_width /2
+            box_y = detection[4] * image_height 
+            box_width = detection[5] * image_width /2
+            box_height = detection[6] * image_height 
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
@@ -60,8 +89,6 @@ def tracking(camera, frame, bbox):
         #check the return value of the camera to check if it works
         if not good:
             break
-
-        #TODO: maybe at FPS code later
 
         #update tracker
         good, bbox = tracker.update(frame)
@@ -85,14 +112,13 @@ def tracking(camera, frame, bbox):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-
+    
+    count = 0
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
 
     #capture a frame from the camera
     val, frame = camera.read()
-
-    
 
     #detect a person from the frame
     bbox = detection(frame=frame)
@@ -117,8 +143,15 @@ if __name__ == '__main__':
             break
 
         #update tracker
-        good, bbox = tracker.update(frame)
-        #bbox = detection(frame=frame)
+        if(count > 20):
+
+            bbox = detection(frame=frame)
+            #tracker.init(frame, bbox)
+            count = 0
+        else:
+            good, bbox = tracker.update(frame)
+            count += 1
+        
         # Calculate Frames per second (FPS)
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
 
@@ -168,7 +201,9 @@ if __name__ == '__main__':
         cv2.putText(frame, "FPS : " + str(int(fps)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
 
         #cv2.putText(frame, "object",(int(bbox[0]), int(bbox[1]+0.05* bbox[3])),cv2.FONT_HERSHEY_SIMPLEX,(.005*bbox[2]),(0,0,255))
-
+        
+        
+            
          # Display result
         cv2.imshow("Tracking", frame)
         key = cv2.waitKey(30)
