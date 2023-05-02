@@ -21,7 +21,7 @@ typedef struct Data
 
 
 /*Code for data struct is sourced and modifed from Pololu ROMIRPiSlaveDemo code*/
-PololuRPiSlave<Data,0> MCU;
+PololuRPiSlave<Data,5> MCU;
 
 Romi32U4Motors motors;
 
@@ -29,13 +29,15 @@ void setup() {
 
   //Set up MCU as I2C peripheral with address of 20
   MCU.init(20);
+  motors.setLeftSpeed(0);
+  motors.setRightSpeed(0);    
 
 }
 
 void loop() {
   uint16_t move_val = 0;
   uint16_t turn_val = 0;
-  uint16_t turn_vals[2] = {0,0};
+  int16_t turn_vals[2] = {0,0};
   long rand_left = 0;
   long rand_right = 0;
   switch(state)
@@ -62,6 +64,9 @@ void loop() {
       if((MCU.buffer.move == 0) && (MCU.buffer.turn == 0))      
       {
         state = READ;
+        turn_vals[0] = 0;
+        turn_vals[1] = 0;
+        move_val = 0;
       }
       
       //calculate the forward movment if the bit is high
@@ -136,25 +141,58 @@ uint16_t move_calc(uint16_t error, bool run)
 //speeds is an array passed in by reference so it can be modifed
 void turn_calc(uint16_t error, uint16_t direction, uint16_t *speeds)
 {
-  int kp = 1;  
-  uint16_t speed = 0;
+  //values to hold accumulated values for derivative and integral term
+  static float d_temp = 0;
+  static float i_temp = 0;
+  //final speed value
+  float speed = 0;
 
-  //run proportional controller with error passed in
-  speed = error * kp;
+  //accumulate error to get average error (might need to change since there is no negative error)
+  //i_temp += error;
+  
+  speed = PID_calc(error,d_temp,i_temp);
+  d_temp = error;  
+
   //check turn bit to determine which motor to apply speeds to
   if(direction == 1)
   {
     //update speed in array passed in
-    speeds[0] = speed;
-    speeds[1] = 0; //TODO: might change this later
+    speeds[0] = (int16_t)speed;
+    speeds[1] = (uint16_t)(-speed); 
   }  
   else
   {
     //update speed in array passed in
-    speeds[0] = 0;
-    speeds[1] = speed;
+    speeds[0] = (uint16_t)(-speed);
+    speeds[1] = (int16_t)speed;
   }
   
+}
+
+uint16_t PID_calc(uint16_t error, float d_temp, float i_temp)
+{
+    //Proportional, Integral, and derivative terms
+    float P_term;
+    float I_term;
+    float D_term;  
+    //constants for PID calculations
+    const float kp = 0.8;  
+    const float ki = 0.01;
+    const float kd = 0.01;
+    //final speed value
+    float speed = 0;
+
+    //accumulate error to get average error (might need to change since there is no negative error)
+    //i_temp += error;
+    
+
+    P_term = kp * error;
+    I_term = ki * i_temp;
+    D_term = kd * d_temp;  
+    //TODO: finish PID code
+    speed = P_term + I_term + D_term;
+
+    return speed;
 }
 
 

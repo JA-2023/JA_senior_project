@@ -85,7 +85,6 @@ if __name__ == '__main__':
 
         #update tracker
         good, bbox = tracker.update(frame)
-        #bbox = detection(frame=frame)
         
         #draw new bounding box
         if good:
@@ -105,7 +104,7 @@ if __name__ == '__main__':
             if(middle_box < (middle_frame - 20)):
                 #deternmine the error between the middle of the box and frame
                
-                error = int((middle_frame - middle_box)/5)
+                error = int(middle_frame - middle_box)
                 
                 if(error > 300):
                     error = 295
@@ -118,7 +117,7 @@ if __name__ == '__main__':
             #object is in the left half
             elif((middle_frame + 20) < middle_box):
                 
-                error = int((middle_box - middle_frame)/5)
+                error = int(middle_box - middle_frame)
                 
                 if(error > 300):
                     error = 295
