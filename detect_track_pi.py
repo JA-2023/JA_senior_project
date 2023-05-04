@@ -84,11 +84,19 @@ if __name__ == '__main__':
         if not good:
             break
 
-        #update tracker
-        if(count > 20):
+        #refresh tracker to keep it from getting stuck
+        if(count > 30):
+
             bbox = detection(frame=frame)
+
+            while(bbox == (0,0,0,0)):
+                val, frame = camera.read()
+                bbox = detection(frame=frame)
+
+            tracker = cv2.legacy_TrackerMOSSE.create()
             tracker.init(frame, bbox)
             count = 0
+        #update tracker
         else:
             good, bbox = tracker.update(frame)
             count += 1
