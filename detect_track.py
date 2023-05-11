@@ -2,7 +2,7 @@ import cv2
 
 classNames = {0: 'background',1: 'person'}
 
-tracker_types = ['KCF', 'MOSSE', 'CSRT']
+tracker_types = ['KCF', 'MOSSE']
 
 tracker_type = tracker_types[1]
 
@@ -14,8 +14,7 @@ if tracker_type == 'KCF':
 if tracker_type == 'MOSSE':
     tracker = cv2.legacy_TrackerMOSSE.create()
     
-if tracker_type == 'CSRT':
-    tracker = cv2.TrackerCSRT_create()
+
     
 
 #creates deep neural network with the model and config file passed in
@@ -55,9 +54,9 @@ def detection(frame):
             image_height, image_width, _ = frame.shape
 
             #get the dimensions from the DNN and scale to frame
-            box_x = detection[3] * image_width /2
+            box_x = detection[3] * image_width * .8
             box_y = detection[4] * image_height 
-            box_width = detection[5] * image_width /2
+            box_width = detection[5] * image_width * .8
             box_height = detection[6] * image_height 
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
@@ -124,17 +123,25 @@ if __name__ == '__main__':
 
         # Start timer
         timer = cv2.getTickCount()
+        
 
         #check the return value of the camera to check if it works
         if not good:
             break
 
-        #update tracker
-        if(count > 20):
+        #refresh tracker to keep it from getting stuck
+        if(count > 30):
 
             bbox = detection(frame=frame)
-            #tracker.init(frame, bbox)
+
+            while(bbox == (0,0,0,0)):
+                val, frame = camera.read()
+                bbox = detection(frame=frame)
+
+            tracker = cv2.legacy_TrackerMOSSE.create()
+            tracker.init(frame, bbox)
             count = 0
+        #update tracker
         else:
             good, bbox = tracker.update(frame)
             count += 1
