@@ -210,7 +210,38 @@ while True:
             ymax = int(min(imH,(boxes[i][2] * imH)))
             xmax = int(min(imW,(boxes[i][3] * imW)))
             
+            #get image width and height
+            image_height, image_width, _ = frame.shape
+            
+            #get middle of bounding box
+            middle_box = int((xmin + xmax) /2)
+            
+            #get the middle of the frame
+            middle_frame = int(image_width / 2)
+            
+            error = abs(middle_box - middle_frame)
+            print(error)
+            
+            cv2.rectangle(frame, (middle_frame,ymin), (middle_frame,ymax), (10, 150, 0), 2)
+            
+            cv2.rectangle(frame, (middle_box,ymin), (middle_box,ymax), (100, 150, 0), 2)
+            
             cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
+            
+                        #determine direction to spin
+            #object is in the right half
+            if(middle_box < (middle_frame - 20)):
+
+                #deternmine the error between the middle of the box and frame
+                error = middle_frame - middle_box
+                print(f"left turn error: {error}")   
+
+                
+            #object is in the left half
+            elif((middle_frame + 20) < middle_box):
+
+                error = middle_box - middle_frame
+                print(f"right turn error: {error}")   
 
             # Draw label
             object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index

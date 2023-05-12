@@ -6,14 +6,14 @@ left = 0
 right = 1
 turn = 1
 no_turn = 0
-move = 1
+move = 0
 no_move = 0
 run = 1
 follow = 0
 move_mode = 1
 headless = 0
-low_error = 75
-high_error = 190
+low_error = 0
+high_error = 0
 
 address = 0 #TODO: figure out what to put here 
 format = 'hh' #TODO: figure out what to put here

@@ -100,6 +100,8 @@ def tracking(camera, frame, bbox):
 if __name__ == '__main__':
     
     count = 0
+    old_error = 0
+    error = 0
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
 
@@ -130,7 +132,7 @@ if __name__ == '__main__':
             break
 
         #refresh tracker to keep it from getting stuck
-        if(count > 30):
+        if(count > 10):
 
             bbox = detection(frame=frame)
 
@@ -144,7 +146,6 @@ if __name__ == '__main__':
         #update tracker
         else:
             good, bbox = tracker.update(frame)
-            count += 1
         
         # Calculate Frames per second (FPS)
         fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
@@ -196,7 +197,10 @@ if __name__ == '__main__':
 
         #cv2.putText(frame, "object",(int(bbox[0]), int(bbox[1]+0.05* bbox[3])),cv2.FONT_HERSHEY_SIMPLEX,(.005*bbox[2]),(0,0,255))
         
+        if(error == old_error):
+            count += 1
         
+        old_error = error
             
          # Display result
         cv2.imshow("Tracking", frame)

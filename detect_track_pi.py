@@ -33,9 +33,9 @@ def detection(frame):
 
             #get the dimensions from the DNN and scale to frame
             box_x = detection[3] * image_width /2
-            box_y = detection[4] * image_height /2
+            box_y = detection[4] * image_height
             box_width = detection[5] * image_width /2
-            box_height = detection[6] * image_height /2
+            box_height = detection[6] * image_height
     
     return (int(box_x),int(box_y),int(box_width),int(box_height))
 
@@ -58,6 +58,12 @@ if __name__ == '__main__':
     time.sleep(1)
     
     count = 0
+    old_error = 0
+    middle = 0
+    error = 0
+    
+    test_data = [no_turn, right,no_move,follow,move_mode,0]
+    bus.write_i2c_block_data(20, 0, test_data)
 
     #set up web camera to get video
     camera = cv2.VideoCapture(0)
@@ -85,11 +91,13 @@ if __name__ == '__main__':
             break
 
         #refresh tracker to keep it from getting stuck
-        if(count > 30):
+        if(count > 10):
 
             bbox = detection(frame=frame)
-
+            test_data = [no_turn, right,no_move,follow,move_mode,0]
+            bus.write_i2c_block_data(20, 0, test_data)
             while(bbox == (0,0,0,0)):
+                print("searching")
                 val, frame = camera.read()
                 bbox = detection(frame=frame)
 
@@ -99,7 +107,7 @@ if __name__ == '__main__':
         #update tracker
         else:
             good, bbox = tracker.update(frame)
-            count += 1
+            
             
         
         #draw new bounding box
@@ -123,7 +131,7 @@ if __name__ == '__main__':
                 error = int(middle_frame - middle_box)
                 
                 if(error > 300):
-                    error = 295
+                    error = 250
 
                 print(f"left turn error: {error}")  
 
@@ -136,7 +144,7 @@ if __name__ == '__main__':
                 error = int(middle_box - middle_frame)
                 
                 if(error > 300):
-                    error = 295
+                    error = 250
 
                 print(f"right turn error: {error}")  
 
@@ -145,11 +153,14 @@ if __name__ == '__main__':
             #object is within the middle
             else:
                 print("middle")
+                middle = 1
+                error = 0
                 test_data = [no_turn, right,no_move,follow,move_mode,0] 
                 
         else:
             #tracking failure, try to detect a new person
             print("tracking error")
+            error = 0
             test_data = [no_turn, right,no_move,follow,move_mode,0]
             
         try: 
@@ -157,7 +168,11 @@ if __name__ == '__main__':
         except:
             print("IO error")
         
+        if((error == old_error) and (middle == 0)):
+            count += 1
         
+        old_error = error
+        middle = 0
        # Display result
         #cv2.imshow("Tracking", frame)
         key = cv2.waitKey(3)
