@@ -240,7 +240,7 @@ if __name__ == '__main__':
                 
                 #determine direction to spin
                 #object is in the right half
-                if(middle_box < (middle_frame - 20)):
+                if(middle_box < (middle_frame - 40)):
                     #deternmine the error between the middle of the box and frame
                    
                     error = int(middle_frame - middle_box)
@@ -254,7 +254,7 @@ if __name__ == '__main__':
 
                     
                 #object is in the left half
-                elif((middle_frame + 20) < middle_box):
+                elif((middle_frame + 40) < middle_box):
                     
                     error = int(middle_box - middle_frame)
                     
