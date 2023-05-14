@@ -176,9 +176,9 @@ uint16_t PID_calc(uint16_t error, float d_temp, float i_temp)
     float I_term;
     float D_term;  
     //constants for PID calculations
-    const float kp = 0.8;  
+    const float kp = 0.25;  
     const float ki = 0.01;
-    const float kd = 0.01;
+    const float kd = 0.00;
     //final speed value
     float speed = 0;
 
