@@ -16,7 +16,8 @@ STATE_TYPE state = READ;
 typedef struct Data
 {
   bool turn, direction, move, run, mode;  
-  uint16_t error;
+  uint16_t turn_error;
+  uint16_t move_error;
 }Data;
 
 
@@ -72,13 +73,13 @@ void loop() {
       //calculate the forward movment if the bit is high
       if(MCU.buffer.move == 1) 
       {
-        move_val = move_calc(MCU.buffer.error, MCU.buffer.run);        
+        move_val = move_calc(MCU.buffer.move_error, MCU.buffer.run);        
       }     
       
       //calculate the turn movement if the bit is high
       if(MCU.buffer.turn == 1)  
       {
-        turn_calc(MCU.buffer.error, MCU.buffer.direction, turn_vals);        
+        turn_calc(MCU.buffer.turn_error, MCU.buffer.direction, turn_vals);        
       }
       
       //add the forward movement and turn movement
@@ -122,19 +123,21 @@ void loop() {
 //the difference between run and follow is the direction of the motors
 uint16_t move_calc(uint16_t error, bool run)
 {
-  int kp = 1; 
-  //check the run bit and determine what to do with the error
-  if(run == 1)  
-  {
-    //the closer the person the bigger the error so the inverse is used
-    error = 1 / error;
-  }
 
-  //run proportional controller with error passed in
-  int speed = kp * error;
-  //caluclate base speed from controller
-  return speed;
+//TODO: add in run/follow functionality
+  
+  //values to hold accumulated values for derivative and integral term
+  static float d_temp = 0;
+  static float i_temp = 0;
+  //final speed value
+  float speed = 0;
+
+
+  speed = PID_calc(error,d_temp,i_temp);
+  d_temp = error;  
+
   //return value calculated
+  return speed;
 }
 
 

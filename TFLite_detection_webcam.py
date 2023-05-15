@@ -171,6 +171,9 @@ freq = cv2.getTickFrequency()
 videostream = VideoStream(resolution=(imW,imH),framerate=30).start()
 time.sleep(1)
 
+width_error = 0
+stop_width_multiper = 0.7
+
 #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
 while True:
 
@@ -218,31 +221,56 @@ while True:
             
             #get the middle of the frame
             middle_frame = int(image_width / 2)
-            
-            error = abs(middle_box - middle_frame)
-            print(error)
-            
+
+            #get 70% of frame width to determine stopping distance
+            stop_width = image_width * stop_width_multiper
+
+            #get width for distance calculations
+            curr_width = xmax - xmin
+
+
             cv2.rectangle(frame, (middle_frame,ymin), (middle_frame,ymax), (10, 150, 0), 2)
             
             cv2.rectangle(frame, (middle_box,ymin), (middle_box,ymax), (100, 150, 0), 2)
             
             cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
-            
-                        #determine direction to spin
-            #object is in the right half
-            if(middle_box < (middle_frame - 20)):
 
+            if(curr_width < stop_width + 10):
+                #find difference between the current width and stop width
+                width_error = stop_width - curr_width
+                if(width_error > 250):
+                    width_error = 250
+                print(f"width error: {width_error}")
+            
+            #determine direction to spin
+            #object is in the right half
+            if(middle_box < (middle_frame - 40)):
                 #deternmine the error between the middle of the box and frame
-                error = middle_frame - middle_box
-                print(f"left turn error: {error}")   
+                
+                error = int(middle_frame - middle_box)
+                
+                if(error > 300):
+                    error = 250
+
+                print(f"left turn error: {error}")  
 
                 
             #object is in the left half
-            elif((middle_frame + 20) < middle_box):
+            elif((middle_frame + 40) < middle_box):
+                
+                error = int(middle_box - middle_frame)
+                
+                if(error > 300):
+                    error = 250
 
-                error = middle_box - middle_frame
-                print(f"right turn error: {error}")   
-
+                print(f"right turn error: {error}")  
+                
+            #object is within the middle
+            else:
+                print("middle")
+                middle = 1
+                error = 0
+                
             # Draw label
             object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
             label = '%s: %d%%' % (object_name, int(scores[i]*100)) # Example: 'person: 72%'
@@ -261,6 +289,9 @@ while True:
     t2 = cv2.getTickCount()
     time1 = (t2-t1)/freq
     frame_rate_calc= 1/time1
+
+    #update width field
+    old_width = curr_width
 
     # Press 'q' to quit
     if cv2.waitKey(1) == ord('q'):

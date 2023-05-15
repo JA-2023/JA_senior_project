@@ -82,6 +82,16 @@ follow = 0
 move_mode = 1
 headless = 0
 
+#variables that will be sent to MCU
+turn_val = 0
+turn_direction = 0
+move_val = 0
+run_follow = 0
+chicken_mode = 1
+turn_error = 0
+move_error = 0
+
+
 
 if __name__ == '__main__':
     # Define and parse input arguments
@@ -187,9 +197,13 @@ if __name__ == '__main__':
     test_data = []
     bus = smbus.SMBus(1)
     time.sleep(1)
+
+    #variables used for calculating distance
+    width_error = 0
+    stop_width_multiper = 0.7   
     
     #make sure wheels aren't moving before running detection
-    test_data = [no_turn, right,no_move,follow,move_mode,0]
+    test_data = [no_turn, right,no_move,follow,move_mode,0,0]
     bus.write_i2c_block_data(20, 0, test_data)
 
     #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
@@ -237,43 +251,81 @@ if __name__ == '__main__':
                 
                 #get the middle of the frame
                 middle_frame = int(image_width / 2)
+
+                
+                #get percentage of frame width to determine stopping distance
+                stop_width = image_width * stop_width_multiper
+
+                #get width for distance calculations
+                curr_width = xmax - xmin
+
+                #calculate distance error
+                if(curr_width < stop_width + 10):
+                    #find difference between the current width and stop width
+                    width_error = stop_width - curr_width
+
+                    #set cap for distance error
+                    if(width_error > 250):
+                        width_error = 250
+                    
+                    #set movement error and tell robot to move
+                    move_error = width_error
+                    move_val = move
+
+                    print(f"width error: {width_error}")
+                else:
+                    #robot does not need to move
+                    move_error = 0
+                    move_val = no_move
                 
                 #determine direction to spin
                 #object is in the right half
                 if(middle_box < (middle_frame - 40)):
                     #deternmine the error between the middle of the box and frame
                    
-                    error = int(middle_frame - middle_box)
+                    turn_error = int(middle_frame - middle_box)
                     
-                    if(error > 300):
-                        error = 250
+                    if(turn_error > 300):
+                        turn_error = 250
 
-                    print(f"left turn error: {error}")  
+                    print(f"left turn error: {turn_error}")  
 
-                    test_data = [turn, left, no_move,follow,move_mode,error]
+                    turn_val = turn
+                    turn_direction = left
+                    run_follow = follow
+                    chicken_mode = move_mode
 
                     
                 #object is in the left half
                 elif((middle_frame + 40) < middle_box):
                     
-                    error = int(middle_box - middle_frame)
+                    turn_error = int(middle_box - middle_frame)
                     
-                    if(error > 300):
-                        error = 250
+                    if(turn_error > 300):
+                        turn_error = 250
 
-                    print(f"right turn error: {error}")  
+                    print(f"right turn error: {turn_error}")  
 
-                    test_data = [turn, right, no_move,follow,move_mode,error]
+                    #set values to send to MCU
+
+                    turn_val = turn
+                    turn_direction = right
+                    run_follow = follow
+                    chicken_mode = move_mode
+
                     
                 #object is within the middle
                 else:
                     print("middle")
-                    middle = 1
-                    error = 0
-                    test_data = [no_turn, right,no_move,follow,move_mode,0] 
-        
+                    turn_error = 0
+
+                    turn_val = no_turn
+                    turn_direction = right
+                    run_follow = follow
+                    chicken_mode = move_mode 
             
                 try: 
+                    test_data = [turn_val,turn_direction,move_val,chicken_mode,turn_error,move_error]
                     bus.write_i2c_block_data(20, 0, test_data)
                 except:
                     print("IO error")
