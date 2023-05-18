@@ -15,9 +15,8 @@ STATE_TYPE state = READ;
 
 typedef struct Data
 {
-  bool turn, direction, move, run, mode;  
-  uint16_t turn_error;
-  uint16_t move_error;
+  uint8_t turn, direction, move, run, mode;  
+  uint8_t turn_error, move_error;
 }Data;
 
 
@@ -37,8 +36,9 @@ void setup() {
 
 void loop() {
   uint16_t move_val = 0;
-  uint16_t turn_val = 0;
   int16_t turn_vals[2] = {0,0};
+  int16_t left_speed = 0;
+  int16_t right_speed = 0;
   long rand_left = 0;
   long rand_right = 0;
   switch(state)
@@ -46,8 +46,6 @@ void loop() {
     case READ:
       //update buffer to get latest data
       //data sent from pi is stored in the data struct
-      MCU.updateBuffer();
-
       //check the move bit to check which state to go to
       if(MCU.buffer.mode == 1)
       {
@@ -60,6 +58,7 @@ void loop() {
     break;      
 
     case MOVE:
+    
       //check the turn and move bytes
       //not moving or turning so just go back to read
       if((MCU.buffer.move == 0) && (MCU.buffer.turn == 0))      
@@ -73,22 +72,25 @@ void loop() {
       //calculate the forward movment if the bit is high
       if(MCU.buffer.move == 1) 
       {
-        move_val = move_calc(MCU.buffer.move_error, MCU.buffer.run);        
+        
+        move_val = move_calc(MCU.buffer.move_error, MCU.buffer.run);       
+        
       }     
       
       //calculate the turn movement if the bit is high
-      if(MCU.buffer.turn == 1)  
+      if(MCU.buffer.turn == 1)
       {
-        turn_calc(MCU.buffer.turn_error, MCU.buffer.direction, turn_vals);        
+        turn_calc(MCU.buffer.turn_error, MCU.buffer.direction, turn_vals);         
       }
       
       //add the forward movement and turn movement
-      turn_vals[0] = turn_vals[0] + move_val;
-      turn_vals[1] = turn_vals[1] + move_val;
+      left_speed = turn_vals[0] + move_val;
+      right_speed = turn_vals[1] + move_val;
       
+
       //set the motor speeds
-      motors.setLeftSpeed(turn_vals[0]);
-      motors.setRightSpeed(turn_vals[1]);
+      motors.setLeftSpeed(left_speed);
+      motors.setRightSpeed(right_speed);
       
       //go to the read state
       state = READ;
