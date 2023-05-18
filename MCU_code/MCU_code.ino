@@ -45,6 +45,7 @@ void loop() {
   {
     case READ:
       //update buffer to get latest data
+      MCU.updateBuffer();
       //data sent from pi is stored in the data struct
       //check the move bit to check which state to go to
       if(MCU.buffer.mode == 1)
