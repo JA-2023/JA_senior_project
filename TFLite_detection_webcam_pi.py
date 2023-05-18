@@ -27,6 +27,7 @@ import time
 from threading import Thread
 import importlib.util
 import smbus
+import struct
 
 # Define VideoStream class to handle streaming of video from webcam in separate processing thread
 # Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
@@ -194,7 +195,7 @@ if __name__ == '__main__':
     time.sleep(1)
     
     #set up values for writing to MCU
-    test_data = []
+    #test_data = [0,0,0,0,0,0,0]
     bus = smbus.SMBus(1)
     time.sleep(1)
 
@@ -203,8 +204,9 @@ if __name__ == '__main__':
     stop_width_multiper = 0.7   
     
     #make sure wheels aren't moving before running detection
-    test_data = [no_turn, right,no_move,follow,move_mode,0,0]
-    bus.write_i2c_block_data(20, 0, test_data)
+    #test_data = [no_turn, right,no_move,follow,move_mode,0,0]
+    #bus.write_i2c_block_data(20, 0, test_data)
+    time.sleep(0.0001)
 
     #for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
     while True:
@@ -262,17 +264,20 @@ if __name__ == '__main__':
                 #calculate distance error
                 if(curr_width < stop_width + 10):
                     #find difference between the current width and stop width
-                    width_error = stop_width - curr_width
+                    width_error = int(stop_width - curr_width)
 
                     #set cap for distance error
                     if(width_error > 250):
                         width_error = 250
                     
+                    elif(width_error < 0):
+                        width_error = 0
+                    
                     #set movement error and tell robot to move
                     move_error = width_error
                     move_val = move
 
-                    print(f"width error: {width_error}")
+                    #print(f"width error: {width_error}")
                 else:
                     #robot does not need to move
                     move_error = 0
@@ -285,10 +290,13 @@ if __name__ == '__main__':
                    
                     turn_error = int(middle_frame - middle_box)
                     
-                    if(turn_error > 300):
+                    if(turn_error > 250):
                         turn_error = 250
+                    
+                    elif(turn_error < 0):
+                        turn_error = 0
 
-                    print(f"left turn error: {turn_error}")  
+                    #print(f"left turn error: {turn_error}")  
 
                     turn_val = turn
                     turn_direction = left
@@ -301,10 +309,13 @@ if __name__ == '__main__':
                     
                     turn_error = int(middle_box - middle_frame)
                     
-                    if(turn_error > 300):
+                    if(turn_error > 250):
                         turn_error = 250
+                        
+                    elif(turn_error < 0):
+                        turn_error = 0
 
-                    print(f"right turn error: {turn_error}")  
+                    #print(f"right turn error: {turn_error}")  
 
                     #set values to send to MCU
 
@@ -316,7 +327,7 @@ if __name__ == '__main__':
                     
                 #object is within the middle
                 else:
-                    print("middle")
+                    #print("middle")
                     turn_error = 0
 
                     turn_val = no_turn
@@ -324,10 +335,17 @@ if __name__ == '__main__':
                     run_follow = follow
                     chicken_mode = move_mode 
             
-                try: 
-                    test_data = [turn_val,turn_direction,move_val,chicken_mode,turn_error,move_error]
-                    bus.write_i2c_block_data(20, 0, test_data)
+                try:
+                
+                    test_data = [turn_val,turn_direction,move_val,run_follow,chicken_mode,turn_error,move_error]
+                    data = list(struct.pack('BBBBBBB',turn_val,turn_direction,move_val,run_follow,chicken_mode,turn_error,move_error))
+                    print(data)
+                    bus.write_i2c_block_data(20, 0, data)
+                    time.sleep(0.0005)
+                    
                 except:
                     print("IO error")
+                    
+                
         
     videostream.stop()
