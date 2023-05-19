@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     #variables used for calculating distance
     width_error = 0
-    stop_width_multiper = 0.7   
+    stop_width_multiper = 0.5 
     
     #make sure wheels aren't moving before running detection
     #test_data = [no_turn, right,no_move,follow,move_mode,0,0]

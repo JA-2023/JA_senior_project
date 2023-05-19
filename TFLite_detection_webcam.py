@@ -204,7 +204,7 @@ while True:
 
     # Loop over all detections and draw detection box if confidence is above minimum threshold
     for i in range(len(scores)):
-        if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+        if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0) and (labels[int(classes[i])] == "person")):
 
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
@@ -237,10 +237,14 @@ while True:
 
             if(curr_width < stop_width + 10):
                 #find difference between the current width and stop width
-                width_error = stop_width - curr_width
+                width_error = int(stop_width - curr_width)
+                
                 if(width_error > 250):
                     width_error = 250
+                
+                width_error = bin(width_error)
                 print(f"width error: {width_error}")
+                
             
             #determine direction to spin
             #object is in the right half
@@ -251,9 +255,9 @@ while True:
                 
                 if(error > 300):
                     error = 250
-
+                
                 print(f"left turn error: {error}")  
-
+                
                 
             #object is in the left half
             elif((middle_frame + 40) < middle_box):
@@ -270,6 +274,7 @@ while True:
                 print("middle")
                 middle = 1
                 error = 0
+        
                 
             # Draw label
             object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
